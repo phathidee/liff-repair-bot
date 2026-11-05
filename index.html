@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบแจ้งซ่อมและปิดเคสหุ่นยนต์</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- LINE LIFF SDK -->
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen py-6 px-4">
+    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-md overflow-hidden p-6">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-xl font-bold text-gray-800">🤖 ระบบแจ้งซ่อม / ปิดเคสหุ่นยนต์</h1>
+            <p id="user-profile-name" class="text-sm text-gray-500 mt-1">กำลังตรวจสอบข้อมูลผู้ใช้งาน...</p>
+        </div>
+
+        <!-- Mode Selector -->
+        <div class="flex rounded-lg bg-gray-100 p-1 mb-6">
+            <button id="tab-open" onclick="switchTab('open')" class="flex-1 py-2 text-sm font-medium rounded-md bg-white shadow text-blue-600 transition">เปิดเคสใหม่</button>
+            <button id="tab-close" onclick="switchTab('close')" class="flex-1 py-2 text-sm font-medium rounded-md text-gray-500 transition">ปิดเคส</button>
+        </div>
+
+        <!-- Form Container -->
+        <form id="repairForm" onsubmit="handleSubmit(event)" class="space-y-4">
+            
+            <!-- ส่วนฟอร์มเปิดเคส -->
+            <div id="section-open" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสสาขา</label>
+                    <input type="text" id="branchId" placeholder="เช่น M101, K001" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หมายเลขซีเรียล (SN หุ่นยนต์)</label>
+                    <input type="text" id="robotSn" placeholder="เช่น SN-2024001" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" required>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หมวดหมู่ปัญหา</label>
+                    <select id="category" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                        <option value="แจ้งอาการเสีย">1. แจ้งอาการเสีย</option>
+                        <option value="แจ้งซ่อมเสีย">2. แจ้งซ่อมเสีย</option>
+                        <option value="สอบถามเบิกอะไหล่">3. สอบถามเบิกอะไหล่</option>
+                        <option value="แจ้งอุบัติเหตุและความเสียหาย">4. แจ้งอุบัติเหตุและความเสียหาย</option>
+                        <option value="จัดการสถานะ / คืนหุ่นยนต์">5. จัดการสถานะ / คืนหุ่นยนต์</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียดอาการ</label>
+                    <textarea id="detail" rows="3" placeholder="ระบุรายละเอียดอาการเบื้องต้น..." class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รูปภาพอาการ (ก่อนซ่อม)</label>
+                    <input type="file" id="imageFile" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+            </div>
+
+            <!-- ส่วนฟอร์มปิดเคส (ซ่อนไว้ก่อน) -->
+            <div id="section-close" class="space-y-4 hidden">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">หมายเลข Ticket ที่ต้องการปิด</label>
+                    <input type="text" id="closeTicketId" placeholder="เช่น TCK-20261105-120000" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียดการซ่อม / การแก้ไข</label>
+                    <textarea id="closeDetail" rows="3" placeholder="ระบุวิธีแก้ไขหรืออะไหล่ที่เปลี่ยน..." class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รูปภาพหลังซ่อม</label>
+                    <input type="file" id="closeImageFile" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg">
+                ยืนยันการส่งข้อมูล
+            </button>
+        </form>
+    </div>
+
+    <script>
+        // ใส่ LIFF ID ของท่านที่ได้จาก LINE Developers Console
+        const LIFF_ID = "YOUR_LIFF_ID_HERE"; 
+        // ใส่ Web App URL ที่ได้จากการ Deploy Google Apps Script
+        const GAS_WEB_APP_URL = "YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+        let currentMode = 'open';
+        let userProfile = { userId: "TEST_USER", displayName: "Test User" };
+
+        window.onload = function() {
+            initializeLiff();
+        };
+
+        function initializeLiff() {
+            liff.init({ liffId: LIFF_ID })
+                .then(() => {
+                    if (!liff.isLoggedIn()) {
+                        liff.login();
+                    } else {
+                        liff.getProfile().then(profile => {
+                            userProfile = profile;
+                            document.getElementById('user-profile-name').innerText = `ผู้ใช้งาน: ${profile.displayName}`;
+                        }).catch(err => {
+                            console.error('getProfile failed', err);
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error('LIFF Initialization failed', err);
+                    document.getElementById('user-profile-name').innerText = "โหมดทดสอบ (ไม่ได้เปิดผ่าน LINE)";
+                });
+        }
+
+        function switchTab(mode) {
+            currentMode = mode;
+            const btnOpen = document.getElementById('tab-open');
+            const btnClose = document.getElementById('tab-close');
+            const secOpen = document.getElementById('section-open');
+            const secClose = document.getElementById('section-close');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (mode === 'open') {
+                btnOpen.className = "flex-1 py-2 text-sm font-medium rounded-md bg-white shadow text-blue-600 transition";
+                btnClose.className = "flex-1 py-2 text-sm font-medium rounded-md text-gray-500 transition";
+                secOpen.classList.remove('hidden');
+                secClose.classList.add('hidden');
+                submitBtn.className = "w-full bg-blue-600 text-white font-medium py-2.5 rounded-lg hover:bg-blue-700 transition duration-200 shadow-lg";
+                submitBtn.innerText = "ยืนยันการเปิดเคส";
+            } else {
+                btnClose.className = "flex-1 py-2 text-sm font-medium rounded-md bg-white shadow text-green-600 transition";
+                btnOpen.className = "flex-1 py-2 text-sm font-medium rounded-md text-gray-500 transition";
+                secClose.classList.remove('hidden');
+                secOpen.classList.add('hidden');
+                submitBtn.className = "w-full bg-green-600 text-white font-medium py-2.5 rounded-lg hover:bg-green-700 transition duration-200 shadow-lg";
+                submitBtn.innerText = "ยืนยันการปิดเคส";
+            }
+        }
+
+        // แปลงไฟล์รูปภาพเป็น Base64 สำหรับส่งเข้า GAS
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerText = "กำลังบันทึกข้อมูล...";
+
+            try {
+                let payload = {
+                    action: currentMode,
+                    userId: userProfile.userId,
+                    displayName: userProfile.displayName
+                };
+
+                if (currentMode === 'open') {
+                    payload.branchId = document.getElementById('branchId').value.trim();
+                    payload.robotSn = document.getElementById('robotSn').value.trim();
+                    payload.category = document.getElementById('category').value;
+                    payload.detail = document.getElementById('detail').value.trim();
+
+                    const fileInput = document.getElementById('imageFile');
+                    if (fileInput.files.length > 0) {
+                        const base64Img = await getBase64(fileInput.files[0]);
+                        payload.imageBase64 = base64Img;
+                        payload.imageName = fileInput.files[0].name;
+                    }
+                } else {
+                    payload.ticketId = document.getElementById('closeTicketId').value.trim();
+                    payload.closeDetail = document.getElementById('closeDetail').value.trim();
+
+                    const fileInput = document.getElementById('closeImageFile');
+                    if (fileInput.files.length > 0) {
+                        const base64Img = await getBase64(fileInput.files[0]);
+                        payload.closeImageBase64 = base64Img;
+                        payload.closeImageName = fileInput.files[0].name;
+                    }
+                }
+
+                // ส่งข้อมูลไปยัง Google Apps Script Web App
+                await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', // ป้องกัน CORS issue ของ Google Apps Script
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("บันทึกข้อมูลสำเร็จเรียบร้อยแล้วครับ!");
+                if (liff.isInClient()) {
+                    liff.closeWindow();
+                } else {
+                    location.reload();
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง");
+                submitBtn.disabled = false;
+                submitBtn.innerText = currentMode === 'open' ? "ยืนยันการเปิดเคส" : "ยืนยันการปิดเคส";
+            }
+        }
+    </script>
+</body>
+</html>
