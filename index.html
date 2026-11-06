@@ -152,7 +152,7 @@
           });
         });
     } else {
-      // โหลด Open Tickets ของสาขานั้นมาปิดเคส (พร้อมแสดงผู้เปิดเคส)
+      // โหลด Open Tickets ของสาขานั้นมาปิดเคส (ตรวจสอบว่ามีรายการค้างหรือไม่)
       showLoading(true);
       fetch(`${GAS_WEB_APP_URL}?action=getOpenTicketsByBranch&branchId=${branchId}`)
         .then(res => res.json())
@@ -160,13 +160,26 @@
           showLoading(false);
           openTicketsData = res.data;
           const ticketSelect = document.getElementById('open-tickets');
-          ticketSelect.innerHTML = '<option value="">-- เลือกรายการเคสค้าง --</option>';
-          openTicketsData.forEach(t => {
+          ticketSelect.innerHTML = ''; // เคลียร์ของเก่าทิ้ง
+          
+          if (openTicketsData.length === 0) {
             const opt = document.createElement('option');
-            opt.value = t.rowIndex;
-            opt.innerText = `[${t.robotSN}] ${t.category} (แจ้งโดย: ${t.openedBy})`;
+            opt.value = "";
+            opt.innerText = "-- ไม่มีเคสค้างในสาขานี้ --";
             ticketSelect.appendChild(opt);
-          });
+          } else {
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = "";
+            defaultOpt.innerText = "-- เลือกรายการเคสค้าง --";
+            ticketSelect.appendChild(defaultOpt);
+
+            openTicketsData.forEach(t => {
+              const opt = document.createElement('option');
+              opt.value = t.rowIndex;
+              opt.innerText = `[${t.robotSN}] ${t.category} (แจ้งโดย: ${t.openedBy})`;
+              ticketSelect.appendChild(opt);
+            });
+          }
         });
     }
   }
@@ -252,15 +265,13 @@
     .then(res => res.json())
     .then(res => {
       alert(res.message);
-      // คืนค่าปุ่มให้กลับมาเปิดใช้งานได้ปกติ
       btn.disabled = false;
       btn.innerText = currentMode === 'open' ? 'ยืนยันการเปิดเคส' : 'ยืนยันการปิดเคส';
       
-      // ตรวจสอบช่องทางการเปิดหน้าจอ
       if (liff.isInClient()) {
-        liff.closeWindow(); // สั่งปิดหน้าต่างหากรันในแอป LINE
+        liff.closeWindow();
       } else {
-        document.getElementById('repair-form').reset(); // รีเซ็ตฟอร์มหากรันบนเบราว์เซอร์ปกติ
+        document.getElementById('repair-form').reset();
       }
     })
     .catch(err => {
