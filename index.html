@@ -301,8 +301,7 @@
       payload.issueType = document.getElementById('issue-type').value;
       payload.issueDetail = detail;
       payload.vendorName = selectedRobot.vendorName || '';
-      payload.areaEmail = selectedRobot.areaEmail || '';
-      payload.regionalEmail = selectedRobot.regionalEmail || '';
+      payload.jobType = "ซ่อม";
     } else {
       const rowIndex = document.getElementById('open-tickets').value;
       if (!rowIndex) { 
