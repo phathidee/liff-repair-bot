@@ -40,14 +40,14 @@
   <div id="open-tickets-count-badge" class="alert-badge">⚠️ มีเคสค้างทั้งหมด X เคส ในระบบ</div>
 
   <form id="repair-form">
-    <!-- โหมดเปิดเคส: ใช้ Input + Datalist ค้นหาได้อิสระ -->
+    <!-- โหมดเปิดเคส: ค้นหาสาขา -->
     <div class="form-group" id="branch-input-group">
       <label for="branch-input">รหัสสาขา / ชื่อสาขา (พิมพ์เพื่อค้นหา):</label>
       <input type="text" id="branch-input" list="branch-list" placeholder="เช่น M101, พระราม 2..." onchange="onBranchSelected()">
       <datalist id="branch-list"></datalist>
     </div>
 
-    <!-- โหมดปิดเคส: ใช้ Select Dropdown บังคับเลือกเฉพาะสาขาที่มีเคสค้าง -->
+    <!-- โหมดปิดเคส: เลือกสาขาที่มีเคสค้าง -->
     <div class="form-group" id="branch-select-group" style="display: none;">
       <label for="branch-select">เลือกสาขาที่มีเคสค้าง:</label>
       <select id="branch-select" onchange="onBranchDropdownSelected()">
@@ -71,12 +71,17 @@
       </select>
     </div>
 
+    <!-- หมวดหมู่ปัญหา 7 รายการ -->
     <div class="form-group" id="issue-type-group">
       <label for="issue-type">หมวดหมู่ปัญหา:</label>
       <select id="issue-type">
         <option value="1. แจ้งอาการเสีย">1. แจ้งอาการเสีย</option>
-        <option value="2. สอบถาม/เบิกอะไหล่">2. สอบถาม/เบิกอะไหล่</option>
-        <option value="3. แจ้งอุบัติเหตุ">3. แจ้งอุบัติเหตุ</option>
+        <option value="2. แจ้งซ่อมเสีย">2. แจ้งซ่อมเสีย</option>
+        <option value="3. ติดตามงาน">3. ติดตามงาน</option>
+        <option value="4. สอบถาม/เบิกอะไหล่">4. สอบถาม/เบิกอะไหล่</option>
+        <option value="5. เรียกข้อมูลการใช้งาน (Data)">5. เรียกข้อมูลการใช้งาน (Data)</option>
+        <option value="6. แจ้งอุบัติเหตุและความเสียหาย">6. แจ้งอุบัติเหตุและความเสียหาย</option>
+        <option value="7. จัดการสถานะ / คืนหุ่นยนต์">7. จัดการสถานะ / คืนหุ่นยนต์</option>
       </select>
     </div>
 
