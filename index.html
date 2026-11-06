@@ -20,6 +20,7 @@
     button.submit-btn { width: 100%; background-color: #2563eb; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
     button.submit-btn:disabled { background-color: #94a3b8; }
     .loading-spinner { display: none; text-align: center; margin: 10px 0; color: #0056b3; font-size: 13px; }
+    .alert-badge { background: #fee2e2; color: #dc2626; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; font-weight: bold; text-align: center; display: none; }
   </style>
 </head>
 <body>
@@ -35,17 +36,18 @@
     <button class="tab-btn" onclick="setMode('close')">ปิดเคส</button>
   </div>
 
-  <div id="loading" class="loading-spinner">กำลังโหลดข้อมูลจาก Google Sheets...</div>
+  <div id="loading" class="loading-spinner">กำลังโหลดข้อมูล...</div>
+  <div id="open-tickets-count-badge" class="alert-badge">⚠️ มีเคสค้างทั้งหมด X เคส ในระบบ</div>
 
   <form id="repair-form">
     <!-- Search Suggestion สำหรับค้นหาและเลือกสาขา -->
     <div class="form-group">
-      <label for="branch-input">รหัสสาขา / ชื่อสาขา (พิมพ์เพื่อค้นหา):</label>
+      <label for="branch-input" id="branch-label">รหัสสาขา / ชื่อสาขา (พิมพ์เพื่อค้นหา):</label>
       <input type="text" id="branch-input" list="branch-list" placeholder="เช่น M101, พระราม 2..." onchange="onBranchSelected()" required>
       <datalist id="branch-list"></datalist>
     </div>
 
-    <!-- Dropdown เลือก Robot SN (โหลดอัตโนมัติตามสาขา) -->
+    <!-- Dropdown เลือก Robot SN (โหมดเปิดเคส) -->
     <div class="form-group" id="robot-sn-group">
       <label for="robot-sn">หมายเลขซีเรียล (SN หุ่นยนต์):</label>
       <select id="robot-sn" required>
@@ -57,7 +59,7 @@
     <div class="form-group" id="open-tickets-group" style="display: none;">
       <label for="open-tickets">เลือกรายการเคสที่ต้องการปิด:</label>
       <select id="open-tickets">
-        <option value="">-- เลือกรหัสสาขาก่อน --</option>
+        <option value="">-- กรุณาเลือกสาขาก่อน --</option>
       </select>
     </div>
 
@@ -88,6 +90,7 @@
   let branchesData = [];
   let robotsData = [];
   let openTicketsData = [];
+  let branchesWithOpenTickets = [];
 
   window.onload = function() {
     initializeLiff();
@@ -107,8 +110,9 @@
     }).catch(err => console.error('LIFF Init Error:', err));
   }
 
-  // ดึงข้อมูลสาขาทำ Search Suggestions (Datalist)
+  // โหลดข้อมูลสาขาทั้งหมด (ใช้ตอนโหมดเปิดเคส)
   function loadBranchSuggestions() {
+    if (currentMode !== 'open') return;
     showLoading(true);
     fetch(`${GAS_WEB_APP_URL}?action=getBranches`)
       .then(res => res.json())
@@ -116,15 +120,50 @@
         showLoading(false);
         if (res.status === 'success') {
           branchesData = res.data;
-          const datalist = document.getElementById('branch-list');
-          datalist.innerHTML = '';
-          branchesData.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = `${b.branchId} - ${b.branchName}`;
-            datalist.appendChild(opt);
-          });
+          renderBranchDatalist(branchesData);
         }
       });
+  }
+
+  // โหลดเฉพาะสาขาที่มีเคสค้าง (ใช้ตอนโหมดปิดเคส)
+  function loadBranchesWithOpenTickets() {
+    showLoading(true);
+    fetch(`${GAS_WEB_APP_URL}?action=getBranchesWithOpenTickets`)
+      .then(res => res.json())
+      .then(res => {
+        showLoading(false);
+        if (res.status === 'success') {
+          branchesWithOpenTickets = res.data;
+          
+          // คำนวณจำนวนเคสค้างทั้งหมดรวมทุกสาขา
+          let totalOpenCount = branchesWithOpenTickets.reduce((sum, b) => sum + b.count, 0);
+          const badge = document.getElementById('open-tickets-count-badge');
+          
+          if (totalOpenCount > 0) {
+            badge.innerText = `⚠️ มีเคสค้างทั้งหมด ${totalOpenCount} เคส ในระบบ (${branchesWithOpenTickets.length} สาขาที่ต้องเคลียร์)`;
+            badge.style.display = 'block';
+          } else {
+            badge.innerText = `✅ ไม่มีเคสค้างในระบบขณะนี้`;
+            badge.style.backgroundColor = '#d1fae5';
+            badge.style.color = '#065f46';
+            badge.style.display = 'block';
+          }
+
+          // แสดงเฉพาะสาขาที่มีเคสค้างใน Datalist ค้นหา
+          renderBranchDatalist(branchesWithOpenTickets);
+        }
+      });
+  }
+
+  function renderBranchDatalist(list) {
+    const datalist = document.getElementById('branch-list');
+    datalist.innerHTML = '';
+    list.forEach(b => {
+      const opt = document.createElement('option');
+      let labelSuffix = b.count ? ` (ค้าง ${b.count} เคส)` : '';
+      opt.value = `${b.branchId} - ${b.branchName}${labelSuffix}`;
+      datalist.appendChild(opt);
+    });
   }
 
   // เมื่อเลือกหรือพิมพ์เลือกสาขา
@@ -135,7 +174,6 @@
     if (!branchId) return;
 
     if (currentMode === 'open') {
-      // โหลด Robot SN ของสาขานั้น
       showLoading(true);
       fetch(`${GAS_WEB_APP_URL}?action=getRobotsByBranch&branchId=${branchId}`)
         .then(res => res.json())
@@ -152,7 +190,6 @@
           });
         });
     } else {
-      // โหลด Open Tickets ของสาขานั้นมาปิดเคส (ตรวจสอบว่ามีรายการค้างหรือไม่)
       showLoading(true);
       fetch(`${GAS_WEB_APP_URL}?action=getOpenTicketsByBranch&branchId=${branchId}`)
         .then(res => res.json())
@@ -160,7 +197,7 @@
           showLoading(false);
           openTicketsData = res.data;
           const ticketSelect = document.getElementById('open-tickets');
-          ticketSelect.innerHTML = ''; // เคลียร์ของเก่าทิ้ง
+          ticketSelect.innerHTML = ''; 
           
           if (openTicketsData.length === 0) {
             const opt = document.createElement('option');
@@ -187,6 +224,11 @@
   function setMode(mode) {
     currentMode = mode;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    // เคลียร์ค่าฟอร์มเมื่อสลับโหมด
+    document.getElementById('repair-form').reset();
+    document.getElementById('branch-input').value = '';
+
     if (mode === 'open') {
       document.querySelectorAll('.tab-btn')[0].classList.add('active');
       document.getElementById('robot-sn-group').style.display = 'block';
@@ -194,6 +236,8 @@
       document.getElementById('issue-type-group').style.display = 'block';
       document.getElementById('detail-label').innerText = 'รายละเอียดอาการเบื้องต้น:';
       document.getElementById('submit-btn').innerText = 'ยืนยันการเปิดเคส';
+      document.getElementById('open-tickets-count-badge').style.display = 'none';
+      loadBranchSuggestions();
     } else {
       document.querySelectorAll('.tab-btn')[1].classList.add('active');
       document.getElementById('robot-sn-group').style.display = 'none';
@@ -201,8 +245,8 @@
       document.getElementById('issue-type-group').style.display = 'none';
       document.getElementById('detail-label').innerText = 'บันทึกการแก้ไข / หมายเหตุปิดเคส:';
       document.getElementById('submit-btn').innerText = 'ยืนยันการปิดเคส';
+      loadBranchesWithOpenTickets(); // โหลดเฉพาะสาขาที่มีเคสค้างทันที
     }
-    onBranchSelected();
   }
 
   function submitForm() {
