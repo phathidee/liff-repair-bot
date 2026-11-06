@@ -56,7 +56,7 @@
     <!-- Dropdown สำหรับโหมดปิดเคส (เลือก Ticket ID ที่ยังค้างอยู่) -->
     <div class="form-group" id="open-tickets-group" style="display: none;">
       <label for="open-tickets">เลือกรายการเคสที่ต้องการปิด:</label>
-      <select id="open-tickets" onchange="onTicketSelected()">
+      <select id="open-tickets">
         <option value="">-- เลือกรหัสสาขาก่อน --</option>
       </select>
     </div>
@@ -75,13 +75,13 @@
       <textarea id="issue-detail" rows="3" placeholder="ระบุรายละเอียด..." required></textarea>
     </div>
 
-    <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">ยืนยันการทำรายการ</button>
+    <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">ยืนยันการเปิดเคส</button>
   </form>
 </div>
 
 <script>
-  const LIFF_ID = "2012406861-CdqnKRov"; // LIFF ID ของคุณ
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzjqc9DLeR9VMBm2d_5V0tb7rkH5o0imrF58f_Fy6dif5tCcP9LKlAF8Ubu_uO4lzt4Ag/exec"; // Web App URL ของคุณ
+  const LIFF_ID = "2012406861-CdqnKRov";
+  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzjqc9DLeR9VMBm2d_5V0tb7rkH5o0imrF58f_Fy6dif5tCcP9LKlAF8Ubu_uO4lzt4Ag/exec";
 
   let currentMode = 'open';
   let userProfile = { userId: "LINE_USER", displayName: "LINE User" };
@@ -152,7 +152,7 @@
           });
         });
     } else {
-      // โหลด Open Tickets ของสาขานั้นมาปิดเคส
+      // โหลด Open Tickets ของสาขานั้นมาปิดเคส (พร้อมแสดงผู้เปิดเคส)
       showLoading(true);
       fetch(`${GAS_WEB_APP_URL}?action=getOpenTicketsByBranch&branchId=${branchId}`)
         .then(res => res.json())
@@ -160,11 +160,11 @@
           showLoading(false);
           openTicketsData = res.data;
           const ticketSelect = document.getElementById('open-tickets');
-          ticketSelect.innerHTML = '<option value="">-- เลือกรายการเคส --</option>';
+          ticketSelect.innerHTML = '<option value="">-- เลือกรายการเคสค้าง --</option>';
           openTicketsData.forEach(t => {
             const opt = document.createElement('option');
             opt.value = t.rowIndex;
-            opt.innerText = `[${t.robotSN}] ${t.issue}`;
+            opt.innerText = `[${t.robotSN}] ${t.category} (แจ้งโดย: ${t.openedBy})`;
             ticketSelect.appendChild(opt);
           });
         });
@@ -217,7 +217,12 @@
 
     if (currentMode === 'open') {
       const robotSN = document.getElementById('robot-sn').value;
-      if (!robotSN) { alert('กรุณาเลือก SN หุ่นยนต์'); btn.disabled = false; return; }
+      if (!robotSN) { 
+        alert('กรุณาเลือก SN หุ่นยนต์'); 
+        btn.disabled = false; 
+        btn.innerText = 'ยืนยันการเปิดเคส'; 
+        return; 
+      }
       
       const selectedRobot = robotsData.find(r => r.robotSN === robotSN) || {};
       payload.robotSN = robotSN;
@@ -228,7 +233,12 @@
       payload.regionalEmail = selectedRobot.regionalEmail || '';
     } else {
       const rowIndex = document.getElementById('open-tickets').value;
-      if (!rowIndex) { alert('กรุณาเลือกเคสที่ต้องการปิด'); btn.disabled = false; return; }
+      if (!rowIndex) { 
+        alert('กรุณาเลือกเคสที่ต้องการปิด'); 
+        btn.disabled = false; 
+        btn.innerText = 'ยืนยันการปิดเคส'; 
+        return; 
+      }
       const selectedTicket = openTicketsData.find(t => t.rowIndex == rowIndex) || {};
       payload.rowIndex = rowIndex;
       payload.robotSN = selectedTicket.robotSN;
@@ -242,11 +252,21 @@
     .then(res => res.json())
     .then(res => {
       alert(res.message);
-      liff.closeWindow();
+      // คืนค่าปุ่มให้กลับมาเปิดใช้งานได้ปกติ
+      btn.disabled = false;
+      btn.innerText = currentMode === 'open' ? 'ยืนยันการเปิดเคส' : 'ยืนยันการปิดเคส';
+      
+      // ตรวจสอบช่องทางการเปิดหน้าจอ
+      if (liff.isInClient()) {
+        liff.closeWindow(); // สั่งปิดหน้าต่างหากรันในแอป LINE
+      } else {
+        document.getElementById('repair-form').reset(); // รีเซ็ตฟอร์มหากรันบนเบราว์เซอร์ปกติ
+      }
     })
     .catch(err => {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       btn.disabled = false;
+      btn.innerText = currentMode === 'open' ? 'ยืนยันการเปิดเคส' : 'ยืนยันการปิดเคส';
     });
   }
 
