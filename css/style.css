@@ -1,0 +1,24 @@
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; }
+.card { background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 480px; margin: auto; position: relative; }
+.header { text-align: center; margin-bottom: 20px; }
+.header h2 { margin: 5px 0; color: #333; font-size: 20px; }
+.header p { color: #666; font-size: 14px; margin: 0; }
+
+.tab-group { display: flex; background: #eee; border-radius: 8px; padding: 3px; margin-bottom: 20px; }
+.tab-btn { flex: 1; border: none; background: transparent; padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; color: #555; }
+.tab-btn.active { background: #fff; color: #0056b3; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+.form-group { margin-bottom: 15px; }
+label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; font-size: 14px; }
+input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+button.submit-btn { width: 100%; background-color: #2563eb; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
+button.submit-btn:disabled { background-color: #94a3b8; }
+
+.loading-spinner { display: none; text-align: center; margin: 10px 0; color: #0056b3; font-size: 13px; }
+.alert-badge { background: #fee2e2; color: #dc2626; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; font-weight: bold; text-align: center; display: none; }
+
+.special-login-btn { position: absolute; top: 15px; right: 15px; background: #10b981; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+
+.dash-btn { padding: 12px 8px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; color: #334155; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.dash-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
+.dash-btn.disabled-role-btn { background: #f1f5f9 !important; color: #94a3b8 !important; border-color: #e2e8f0 !important; cursor: not-allowed !important; opacity: 0.6; }
