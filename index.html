@@ -3,85 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ระบบแจ้งซ่อม / ปิดเคสหุ่นยนต์ (Preview Role Mode)</title>
+  <title>ระบบแจ้งซ่อม / ปิดเคสหุ่นยนต์</title>
   
   <!-- LINE LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-  <!-- ==========================================
-       🎨 SECTION 1: STYLES (การแต่งหน้าตาเว็บ)
-       ========================================== -->
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; }
-    .card { background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 480px; margin: auto; position: relative; }
-    .header { text-align: center; margin-bottom: 20px; }
-    .header h2 { margin: 5px 0; color: #333; font-size: 20px; }
-    .header p { color: #666; font-size: 14px; margin: 0; }
-    
-    /* แท็บสลับหน้าเปิด/ปิดเคส */
-    .tab-group { display: flex; background: #eee; border-radius: 8px; padding: 3px; margin-bottom: 20px; }
-    .tab-btn { flex: 1; border: none; background: transparent; padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; color: #555; }
-    .tab-btn.active { background: #fff; color: #0056b3; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    
-    /* องค์ประกอบฟอร์ม */
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; font-size: 14px; }
-    input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-    button.submit-btn { width: 100%; background-color: #2563eb; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
-    button.submit-btn:disabled { background-color: #94a3b8; }
-    
-    /* ตัวหมุนสถานะกำลังโหลด / แจ้งเตือน */
-    .loading-spinner { display: none; text-align: center; margin: 10px 0; color: #0056b3; font-size: 13px; }
-    .alert-badge { background: #fee2e2; color: #dc2626; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; font-weight: bold; text-align: center; display: none; }
-    
-    /* ปุ่มโหมดพิเศษ มุมบนขวา */
-    .special-login-btn { position: absolute; top: 15px; right: 15px; background: #10b981; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-    
-    /* ป๊อปอัป Modal พิเศษ */
-    .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-    .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center; }
-    .modal-content input { margin-bottom: 15px; }
-    .modal-btns { display: flex; gap: 10px; margin-top: 10px; }
-    .modal-btns button { flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    .btn-confirm { background: #2563eb; color: white; }
-    .btn-cancel { background: #e5e7eb; color: #374151; }
-
-    /* ปุ่ม Bypass Roles ใน Modal */
-    .role-bypass-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; border-top: 1px dashed #ccc; padding-top: 12px; }
-    .role-chip-btn { padding: 8px; font-size: 12px; border-radius: 6px; border: 1px solid #10b981; background: #ecfdf5; color: #047857; font-weight: bold; cursor: pointer; }
-    .role-chip-btn:hover { background: #d1fae5; }
-
-    /* โครงสร้าง Dashboard พิเศษหลังจำลอง Login */
-    #special-dashboard-section { display: none; margin-top: 20px; border-top: 2px solid #2563eb; padding-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px; }
-    .role-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background: #dbeafe; color: #1e40af; margin-bottom: 10px; }
-    
-    /* ปุ่มเมนูสำหรับแต่ละ Role ใน Dashboard */
-    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .dash-btn { padding: 12px 8px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; color: #334155; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-    .dash-btn:hover { background: #f1f5f9; border-color: #94a3b8; }
-    
-    /* สไตล์ปุ่มที่ไม่มีสิทธิ์ (Disabled/สิทธิ์เทา ในอนาคต) */
-    .dash-btn.disabled-role-btn { background: #f1f5f9 !important; color: #94a3b8 !important; border-color: #e2e8f0 !important; cursor: not-allowed !important; opacity: 0.6; }
-  </style>
+  <!-- CSS สไตล์หน้าเว็บ -->
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<!-- ==========================================
-     🖼️ SECTION 2: HTML STRUCTURE (โครงสร้างหน้าจอ)
-     ========================================== -->
 <div class="card">
   <!-- ปุ่มกดเปิด Modal โหมดพิเศษ (Bypass Demo) -->
-  <button class="special-login-btn" onclick="openSpecialLoginModal()">🔐 โหมดพิเศษ (Bypass)</button>
+  <button class="special-login-btn" onclick="AuthModule.openSpecialLoginModal()">🔐 โหมดพิเศษ (Bypass)</button>
 
   <div class="header">
     <h2>🤖 ระบบแจ้งซ่อม / ปิดเคสหุ่นยนต์</h2>
     <p>ผู้ใช้งาน: <span id="user-display-name">กำลังโหลด...</span></p>
   </div>
 
-  <!-- ปุ่มสลับโหมด เปิดเคส / ปิดเคส (สำหรับ Staff ทั่วไป) -->
+  <!-- ปุ่มสลับโหมด เปิดเคส / ปิดเคส -->
   <div class="tab-group">
-    <button class="tab-btn active" onclick="setMode('open')">เปิดเคสใหม่</button>
-    <button class="tab-btn" onclick="setMode('close')">ปิดเคส</button>
+    <button class="tab-btn active" onclick="AppModule.setMode('open')">เปิดเคสใหม่</button>
+    <button class="tab-btn" onclick="AppModule.setMode('close')">ปิดเคส</button>
   </div>
 
   <div id="loading" class="loading-spinner">กำลังโหลดข้อมูล...</div>
@@ -92,14 +35,14 @@
     <!-- โหมดเปิดเคส: ช่องพิมพ์ค้นหาสาขา -->
     <div class="form-group" id="branch-input-group">
       <label for="branch-input">รหัสสาขา / ชื่อสาขา (พิมพ์เพื่อค้นหา):</label>
-      <input type="text" id="branch-input" list="branch-list" placeholder="เช่น M101, พระราม 2..." onchange="onBranchSelected()">
+      <input type="text" id="branch-input" list="branch-list" placeholder="เช่น M101, พระราม 2..." onchange="AppModule.onBranchSelected()">
       <datalist id="branch-list"></datalist>
     </div>
 
     <!-- โหมดปิดเคส: เลือกสาขาที่มีเคสค้างอยู่ -->
     <div class="form-group" id="branch-select-group" style="display: none;">
       <label for="branch-select">เลือกสาขาที่มีเคสค้าง:</label>
-      <select id="branch-select" onchange="onBranchDropdownSelected()">
+      <select id="branch-select" onchange="AppModule.onBranchDropdownSelected()">
         <option value="">-- กำลังโหลดสาขาที่มีเคสค้าง --</option>
       </select>
     </div>
@@ -141,429 +84,48 @@
     </div>
 
     <!-- ปุ่มส่งฟอร์ม -->
-    <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">ยืนยันการเปิดเคส</button>
+    <button type="button" class="submit-btn" id="submit-btn" onclick="AppModule.submitForm()">ยืนยันการเปิดเคส</button>
   </form>
 
-  <!-- ==========================================
-       📊 SECTION SPECIAL DASHBOARD (โซนแสดงผลสิทธิ์พิเศษ)
-       ========================================== -->
-  <div id="special-dashboard-section">
+  <!-- โซนแสดงผล Special Dashboard ตาม Role -->
+  <div id="special-dashboard-section" style="display: none; margin-top: 20px; border-top: 2px solid #2563eb; padding-top: 15px; background: #f8fafc; padding: 15px; border-radius: 8px;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <h3 style="margin: 0; font-size: 16px; color: #1e293b;">⚡ พื้นที่ทำงานสิทธิ์พิเศษ</h3>
-      <span class="role-badge" id="current-role-badge">Role: AdminIT</span>
+      <span class="role-badge" id="current-role-badge" style="display:inline-block; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:bold; background:#dbeafe; color:#1e40af;">Role: AdminIT</span>
     </div>
     <p style="font-size: 12px; color: #64748b; margin: 4px 0 12px 0;">จำลองเมนูและฟังก์ชันที่จะเปิดให้ใช้งานตามสิทธิ์ Role</p>
     
-    <div class="dashboard-grid" id="dashboard-buttons-container">
-      <!-- ปุ่มจะถูกสร้างตาม Role ด้วย JavaScript -->
-    </div>
-    <button onclick="logoutSpecialMode()" style="width: 100%; margin-top: 15px; background: #e2e8f0; color: #475569; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">🚪 ออกจากโหมดพิเศษ</button>
+    <div class="dashboard-grid" id="dashboard-buttons-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;"></div>
+    <button onclick="AuthModule.logoutSpecialMode()" style="width: 100%; margin-top: 15px; background: #e2e8f0; color: #475569; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">🚪 ออกจากโหมดพิเศษ</button>
   </div>
 </div>
 
 <!-- Modal ป๊อปอัปสำหรับ Special Login (พร้อม Bypass เลือก Role) -->
-<div id="special-login-modal" class="modal">
-  <div class="modal-content">
+<div id="special-login-modal" class="modal" style="display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center;">
+  <div class="modal-content" style="background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 400px; text-align: center;">
     <h3>🔑 เข้าสู่ระบบสิทธิ์พิเศษ</h3>
     <p style="font-size: 13px; color: #666; margin-bottom: 10px;">กรอกรหัสผ่านเพื่อล็อกอิน หรือทดสอบเลือก Role Bypass ด้านล่าง</p>
-    <input type="password" id="special-password" placeholder="กรอกรหัสผ่าน (ชั่วคราวพิมพ์อะไรก็ได้)">
+    <input type="password" id="special-password" placeholder="กรอกรหัสผ่าน" style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 15px;">
     
-    <!-- ปุ่ม Bypass สำหรับทดสอบดูแต่ละ Role -->
     <div style="font-size: 11px; color: #059669; font-weight: bold; text-align: left;">⚡ Bypass เลือกสิทธิ์เพื่อทดลองดูเมนู:</div>
-    <div class="role-bypass-group">
-      <button class="role-chip-btn" onclick="bypassRoleLogin('AdminIT')">👨‍💻 AdminIT</button>
-      <button class="role-chip-btn" onclick="bypassRoleLogin('Admin')">👑 Admin</button>
-      <button class="role-chip-btn" onclick="bypassRoleLogin('Technician')">🛠️ Technician</button>
-      <button class="role-chip-btn" onclick="bypassRoleLogin('Vendor')">🏭 Vendor</button>
+    <div class="role-bypass-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; border-top: 1px dashed #ccc; padding-top: 12px;">
+      <button class="role-chip-btn" onclick="AuthModule.bypassRoleLogin('AdminIT')" style="padding: 8px; font-size: 12px; border-radius: 6px; border: 1px solid #10b981; background: #ecfdf5; color: #047857; font-weight: bold; cursor: pointer;">👨‍💻 AdminIT</button>
+      <button class="role-chip-btn" onclick="AuthModule.bypassRoleLogin('Admin')" style="padding: 8px; font-size: 12px; border-radius: 6px; border: 1px solid #10b981; background: #ecfdf5; color: #047857; font-weight: bold; cursor: pointer;">👑 Admin</button>
+      <button class="role-chip-btn" onclick="AuthModule.bypassRoleLogin('Technician')" style="padding: 8px; font-size: 12px; border-radius: 6px; border: 1px solid #10b981; background: #ecfdf5; color: #047857; font-weight: bold; cursor: pointer;">🛠️ Technician</button>
+      <button class="role-chip-btn" onclick="AuthModule.bypassRoleLogin('Vendor')" style="padding: 8px; font-size: 12px; border-radius: 6px; border: 1px solid #10b981; background: #ecfdf5; color: #047857; font-weight: bold; cursor: pointer;">🏭 Vendor</button>
     </div>
 
-    <div class="modal-btns">
-      <button class="btn-confirm" onclick="submitSpecialLogin()">ยืนยัน ล็อกอิน</button>
-      <button class="btn-cancel" onclick="closeSpecialLoginModal()">ยกเลิก</button>
+    <div class="modal-btns" style="display: flex; gap: 10px; margin-top: 10px;">
+      <button class="btn-confirm" onclick="AuthModule.submitSpecialLogin()" style="flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: #2563eb; color: white;">ยืนยัน ล็อกอิน</button>
+      <button class="btn-cancel" onclick="AuthModule.closeSpecialLoginModal()" style="flex: 1; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; background: #e5e7eb; color: #374151;">ยกเลิก</button>
     </div>
   </div>
 </div>
 
-<!-- ==========================================
-     ⚙️ SECTION 3: JAVASCRIPT LOGIC (ลอจิกการทำงาน)
-     ========================================== -->
-<script>
-  // ค่าคงที่ของระบบ
-  const LIFF_ID = "2012406861-CdqnKRov";
-  const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzjqc9DLeR9VMBm2d_5V0tb7rkH5o0imrF58f_Fy6dif5tCcP9LKlAF8Ubu_uO4lzt4Ag/exec";
-
-  // ตัวแปรเก็บ State ข้อมูลในหน้าเว็บ
-  let currentMode = 'open';
-  let userProfile = { userId: "LINE_USER", displayName: "LINE User" };
-  let branchesData = [];
-  let robotsData = [];
-  let openTicketsData = [];
-  let branchesWithOpenTickets = [];
-  let activeRole = null; // เก็บ Role ปัจจุบันที่เข้าใช้งาน
-
-  // เมื่อโหลดหน้าเว็บสำเร็จ ให้เริ่มต้นทำงาน
-  window.onload = function() {
-    initializeLiff();
-    loadBranchSuggestions();
-  };
-
-  // --- 3.1 LIFF INIT & AUTO-UPSERT ---
-  function initializeLiff() {
-    liff.init({ liffId: LIFF_ID }).then(() => {
-      if (!liff.isLoggedIn()) {
-        liff.login();
-      } else {
-        liff.getProfile().then(profile => {
-          userProfile = profile;
-          document.getElementById('user-display-name').innerText = profile.displayName;
-          triggerAutoUpsert(profile);
-        });
-      }
-    }).catch(err => console.error('LIFF Init Error:', err));
-  }
-
-  function triggerAutoUpsert(profile) {
-    fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'touchUser', userId: profile.userId, displayName: profile.displayName })
-    }).catch(err => console.log("Auto upsert error:", err));
-  }
-
-  // --- 3.2 SPECIAL LOGIN & BYPASS LOGIC ---
-  function openSpecialLoginModal() {
-    document.getElementById('special-password').value = '';
-    document.getElementById('special-login-modal').style.display = 'flex';
-  }
-
-  function closeSpecialLoginModal() {
-    document.getElementById('special-login-modal').style.display = 'none';
-  }
-
-  // ฟังก์ชัน Bypass สิทธิ์ทันทีเพื่อทดสอบแต่ละ Role
-  function bypassRoleLogin(roleName) {
-    alert(`🧪 [Bypass Mode] ทดลองเข้าใช้งานในสิทธิ์: ${roleName}`);
-    activeRole = roleName;
-    closeSpecialLoginModal();
-    renderSpecialDashboard(roleName);
-  }
-
-  // ส่งตรวจสอบรหัสผ่าน (พร้อม Bypass ชั่วคราวถ้า Backend คืนค่าอะไรมา)
-  function submitSpecialLogin() {
-    const password = document.getElementById('special-password').value;
-    
-    // หากพิมพ์ Password อะไรเข้ามา ให้ Bypass ผ่านทันทีชั่วคราว
-    if (password) {
-      alert('🧪 [Bypass Mode] ผ่านรหัสผ่านชั่วคราวสำเร็จ! เข้าสู่สิทธิ์ AdminIT');
-      activeRole = 'AdminIT';
-      closeSpecialLoginModal();
-      renderSpecialDashboard('AdminIT');
-      return;
-    }
-
-    showLoading(true);
-    fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        action: 'verifySpecialLogin',
-        userId: userProfile.userId,
-        password: password
-      })
-    })
-    .then(res => res.json())
-    .then(res => {
-      showLoading(false);
-      if (res.status === 'success') {
-        alert('🎉 ' + res.message + '\nRole: ' + res.role);
-        activeRole = res.role;
-        closeSpecialLoginModal();
-        renderSpecialDashboard(res.role);
-      } else {
-        alert(res.message);
-        if (res.message.includes('ไม่มีสิทธิ์')) {
-          closeSpecialLoginModal();
-        }
-      }
-    })
-    .catch(err => {
-      showLoading(false);
-      // ถ้า Backend Error ให้ fallback เป็น Bypass AdminIT เพื่อให้ทดสอบต่อได้
-      alert('⚠️ เชื่อมต่อไม่ได้ เข้าสู่ Bypass AdminIT ให้ชั่วคราวครับ');
-      activeRole = 'AdminIT';
-      closeSpecialLoginModal();
-      renderSpecialDashboard('AdminIT');
-    });
-  }
-
-  // --- 3.3 DASHBOARD RENDERER (แสดงเมนูและจำลองสิทธิ์เทา) ---
-  function renderSpecialDashboard(role) {
-    const container = document.getElementById('dashboard-buttons-container');
-    const badge = document.getElementById('current-role-badge');
-    const dashboardSection = document.getElementById('special-dashboard-section');
-    
-    badge.innerText = `Role: ${role}`;
-    container.innerHTML = '';
-
-    // รายการเมนูทั้งหมดของระบบ
-    const allMenuButtons = [
-      { id: 'btn-user-mgr', label: '👥 จัดการผู้ใช้ (Special_Users)', roles: ['AdminIT'] },
-      { id: 'btn-sys-config', label: '⚙️ ตั้งค่าระบบ/สาขา', roles: ['AdminIT', 'Admin'] },
-      { id: 'btn-tech-job', label: '🛠️ รายการรับงานซ่อม (Technician)', roles: ['AdminIT', 'Technician'] },
-      { id: 'btn-parts-order', label: '📦 เบิก/อนุมัติอะไหล่', roles: ['AdminIT', 'Admin', 'Technician'] },
-      { id: 'btn-vendor-claim', label: '🏭 จัดการส่งซ่อม Vendor', roles: ['AdminIT', 'Vendor'] },
-      { id: 'btn-report-export', label: '📊 ดึงรายงาน Excel/Summary', roles: ['AdminIT', 'Admin'] }
-    ];
-
-    // สร้างปุ่มตามสิทธิ์ (ถ้ามีสิทธิ์ให้กดได้ / ถ้าไม่มีสิทธิ์ให้ทำเป็นสีเทาตามโจทย์อนาคต)
-    allMenuButtons.forEach(btn => {
-      const buttonElem = document.createElement('div');
-      buttonElem.className = 'dash-btn';
-      buttonElem.innerText = btn.label;
-
-      const hasAccess = btn.roles.includes(role);
-
-      if (hasAccess) {
-        buttonElem.onclick = () => alert(`คลิกเปิดเมนู: ${btn.label}`);
-      } else {
-        // อนาคต: ถ้าสิทธิ์เข้ามาใช้งานไม่ได้ ปุ่มจะกลายเป็นสีเทา (Disabled)
-        buttonElem.classList.add('disabled-role-btn');
-        buttonElem.innerText += ' 🔒';
-        buttonElem.onclick = () => alert(`⚠️ เฉพาะสิทธิ์ [${btn.roles.join(', ')}] เท่านั้นที่ใช้เมนูนี้ได้`);
-      }
-
-      container.appendChild(buttonElem);
-    });
-
-    dashboardSection.style.display = 'block';
-    dashboardSection.scrollIntoView({ behavior: 'smooth' });
-  }
-
-  function logoutSpecialMode() {
-    activeRole = null;
-    document.getElementById('special-dashboard-section').style.display = 'none';
-    alert('ออกจากโหมดพิเศษเรียบร้อยแล้ว');
-  }
-
-  // --- 3.4 DATA LOADING FUNCTIONS ---
-  function loadBranchSuggestions() {
-    showLoading(true);
-    fetch(`${GAS_WEB_APP_URL}?action=getBranches`)
-      .then(res => res.json())
-      .then(res => {
-        showLoading(false);
-        if (res.status === 'success') {
-          branchesData = res.data;
-          const datalist = document.getElementById('branch-list');
-          datalist.innerHTML = '';
-          branchesData.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = `${b.branchId} - ${b.branchName}`;
-            datalist.appendChild(opt);
-          });
-        }
-      });
-  }
-
-  function loadBranchesWithOpenTickets() {
-    showLoading(true);
-    fetch(`${GAS_WEB_APP_URL}?action=getBranchesWithOpenTickets`)
-      .then(res => res.json())
-      .then(res => {
-        showLoading(false);
-        if (res.status === 'success') {
-          branchesWithOpenTickets = res.data;
-          
-          let totalOpenCount = branchesWithOpenTickets.reduce((sum, b) => sum + b.count, 0);
-          const badge = document.getElementById('open-tickets-count-badge');
-          const select = document.getElementById('branch-select');
-          
-          select.innerHTML = '<option value="">-- กรุณาเลือกสาขาที่มีเคสค้าง --</option>';
-
-          if (totalOpenCount > 0) {
-            badge.innerText = `⚠️ มีเคสค้างทั้งหมด ${totalOpenCount} เคส ในระบบ (${branchesWithOpenTickets.length} สาขา)`;
-            badge.style.display = 'block';
-
-            branchesWithOpenTickets.forEach(b => {
-              const opt = document.createElement('option');
-              opt.value = b.branchId;
-              opt.innerText = `${b.branchId} - ${b.branchName} (ค้าง ${b.count} เคส)`;
-              select.appendChild(opt);
-            });
-          } else {
-            badge.innerText = `✅ ไม่มีเคสค้างในระบบขณะนี้`;
-            badge.style.backgroundColor = '#d1fae5';
-            badge.style.color = '#065f46';
-            badge.style.display = 'block';
-
-            const opt = document.createElement('option');
-            opt.value = "";
-            opt.innerText = "-- ไม่มีเคสค้างในระบบ --";
-            select.appendChild(opt);
-          }
-        }
-      });
-  }
-
-  function onBranchSelected() {
-    const val = document.getElementById('branch-input').value;
-    const branchId = val.split(' - ')[0].trim();
-    if (!branchId) return;
-
-    showLoading(true);
-    fetch(`${GAS_WEB_APP_URL}?action=getRobotsByBranch&branchId=${branchId}`)
-      .then(res => res.json())
-      .then(res => {
-        showLoading(false);
-        robotsData = res.data;
-        const robotSelect = document.getElementById('robot-sn');
-        robotSelect.innerHTML = '<option value="">-- เลือก SN หุ่นยนต์ --</option>';
-        robotsData.forEach(r => {
-          const opt = document.createElement('option');
-          opt.value = r.robotSN;
-          opt.innerText = `${r.robotSN} (${r.robotModel})`;
-          robotSelect.appendChild(opt);
-        });
-      });
-  }
-
-  function onBranchDropdownSelected() {
-    const branchId = document.getElementById('branch-select').value;
-    if (!branchId) return;
-
-    showLoading(true);
-    fetch(`${GAS_WEB_APP_URL}?action=getOpenTicketsByBranch&branchId=${branchId}`)
-      .then(res => res.json())
-      .then(res => {
-        showLoading(false);
-        openTicketsData = res.data;
-        const ticketSelect = document.getElementById('open-tickets');
-        ticketSelect.innerHTML = '<option value="">-- เลือกรายการเคสค้าง --</option>';
-        
-        openTicketsData.forEach(t => {
-          const opt = document.createElement('option');
-          opt.value = t.rowIndex;
-          opt.innerText = `[${t.robotSN}] ${t.category} (แจ้งโดย: ${t.openedBy})`;
-          ticketSelect.appendChild(opt);
-        });
-      });
-  }
-
-  // --- 3.5 FORM MODE SWITCHING & SUBMISSION ---
-  function setMode(mode) {
-    currentMode = mode;
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('repair-form').reset();
-
-    if (mode === 'open') {
-      document.querySelectorAll('.tab-btn')[0].classList.add('active');
-      document.getElementById('branch-input-group').style.display = 'block';
-      document.getElementById('branch-select-group').style.display = 'none';
-      document.getElementById('robot-sn-group').style.display = 'block';
-      document.getElementById('open-tickets-group').style.display = 'none';
-      document.getElementById('issue-type-group').style.display = 'block';
-      document.getElementById('detail-label').innerText = 'รายละเอียดอาการเบื้องต้น:';
-      document.getElementById('submit-btn').innerText = 'ยืนยันการเปิดเคส';
-      document.getElementById('open-tickets-count-badge').style.display = 'none';
-      loadBranchSuggestions();
-    } else {
-      document.querySelectorAll('.tab-btn')[1].classList.add('active');
-      document.getElementById('branch-input-group').style.display = 'none';
-      document.getElementById('branch-select-group').style.display = 'block';
-      document.getElementById('robot-sn-group').style.display = 'none';
-      document.getElementById('open-tickets-group').style.display = 'block';
-      document.getElementById('issue-type-group').style.display = 'none';
-      document.getElementById('detail-label').innerText = 'บันทึกการแก้ไข / หมายเหตุปิดเคส:';
-      document.getElementById('submit-btn').innerText = 'ยืนยันการปิดเคส';
-      loadBranchesWithOpenTickets();
-    }
-  }
-
-  function submitForm() {
-    let branchId = '';
-    let branchName = '';
-    const detail = document.getElementById('issue-detail').value;
-
-    if (currentMode === 'open') {
-      const branchVal = document.getElementById('branch-input').value;
-      branchId = branchVal.split(' - ')[0].trim();
-      branchName = branchVal.split(' - ')[1] || branchId;
-    } else {
-      const select = document.getElementById('branch-select');
-      branchId = select.value;
-      branchName = select.options[select.selectedIndex] ? select.options[select.selectedIndex].text : branchId;
-    }
-
-    if (!branchId || !detail) {
-      alert('กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-
-    const btn = document.getElementById('submit-btn');
-    btn.disabled = true;
-    btn.innerText = 'กำลังส่งข้อมูล...';
-
-    let payload = {
-      action: currentMode === 'open' ? 'createTicket' : 'closeTicket',
-      branchId: branchId,
-      branchName: branchName,
-      userId: userProfile.userId,
-      displayName: userProfile.displayName
-    };
-
-    if (currentMode === 'open') {
-      const robotSN = document.getElementById('robot-sn').value;
-      if (!robotSN) { 
-        alert('กรุณาเลือก SN หุ่นยนต์'); 
-        btn.disabled = false; 
-        btn.innerText = 'ยืนยันการเปิดเคส'; 
-        return; 
-      }
-      
-      const selectedRobot = robotsData.find(r => r.robotSN === robotSN) || {};
-      payload.robotSN = robotSN;
-      payload.issueType = document.getElementById('issue-type').value;
-      payload.issueDetail = detail;
-      payload.vendorName = selectedRobot.vendorName || '';
-      payload.jobType = "ซ่อม";
-    } else {
-      const rowIndex = document.getElementById('open-tickets').value;
-      if (!rowIndex) { 
-        alert('กรุณาเลือกเคสที่ต้องการปิด'); 
-        btn.disabled = false; 
-        btn.innerText = 'ยืนยันการปิดเคส'; 
-        return; 
-      }
-      const selectedTicket = openTicketsData.find(t => t.rowIndex == rowIndex) || {};
-      payload.rowIndex = rowIndex;
-      payload.robotSN = selectedTicket.robotSN;
-      payload.resolution = detail;
-    }
-
-    fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(res => {
-      alert(res.message);
-      btn.disabled = false;
-      btn.innerText = currentMode === 'open' ? 'ยืนยันการเปิดเคส' : 'ยืนยันการปิดเคส';
-      
-      if (liff.isInClient()) {
-        liff.closeWindow();
-      } else {
-        document.getElementById('repair-form').reset();
-      }
-    })
-    .catch(err => {
-      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-      btn.disabled = false;
-      btn.innerText = currentMode === 'open' ? 'ยืนยันการเปิดเคส' : 'ยืนยันการปิดเคส';
-    });
-  }
-
-  function showLoading(show) {
-    document.getElementById('loading').style.display = show ? 'block' : 'none';
-  }
-</script>
+<!-- โหลดไฟล์ JavaScript ตามลำดับความสัมพันธ์ -->
+<script src="js/config.js"></script>
+<script src="js/api.service.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
