@@ -11,19 +11,18 @@ window.onload = function() {
 };
 
 const AppModule = {
-  // ⚡ ฟังก์ชันสำหรับปิดหน้าต่าง (รองรับทั้ง LINE Mobile และ PC Browsers)
+  // ⚡ ฟังก์ชันสำหรับจัดการปุ่ม "ออก / ปิด" (รองรับทั้งมือถือและทุก Browser บนคอมพิวเตอร์)
   closeAppWindow() {
     if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
-      // สำหรับการเปิดในแอป LINE บนมือถือ -> ปิดหน้าต่าง LIFF กลับเข้าหน้าแชต LINE
+      // 1. ถ้าเปิดในแอป LINE บนมือถือ -> สั่งปิดหน้าต่าง LIFF เด้งกลับเข้าแชท LINE ทันที
       liff.closeWindow();
     } else {
-      // สำหรับการเปิดบน Web Browser ในคอมพิวเตอร์ / เบราว์เซอร์ภายนอก
-      window.close();
-      
-      // กรณี Browser บล็อกการใช้ window.close() ตรงๆ
-      setTimeout(() => {
-        window.location.href = "about:blank";
-      }, 300);
+      // 2. ถ้าเปิดบนคอมพิวเตอร์ (ทุก Browser) -> เนื่องจาก Browser บล็อก window.close() 
+      // ระบบจะถามยืนยันและพาเปลี่ยนเส้นทางไปหน้าแรกหรือหน้า LINE แทน
+      const confirmLeave = confirm("ต้องการออกจากระบบ / ปิดหน้านี้ใช่หรือไม่?");
+      if (confirmLeave) {
+        window.location.href = "https://line.me/"; 
+      }
     }
   },
 
