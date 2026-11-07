@@ -4,28 +4,40 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ระบบแจ้งซ่อม / ปิดเคสหุ่นยนต์</title>
+  
+  <!-- LINE LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <!-- ==========================================
+       🎨 SECTION 1: STYLES (การแต่งหน้าตาเว็บ)
+       ========================================== -->
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 15px; }
     .card { background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); max-width: 450px; margin: auto; position: relative; }
     .header { text-align: center; margin-bottom: 20px; }
     .header h2 { margin: 5px 0; color: #333; font-size: 20px; }
     .header p { color: #666; font-size: 14px; margin: 0; }
+    
+    /* แท็บสลับหน้าเปิด/ปิดเคส */
     .tab-group { display: flex; background: #eee; border-radius: 8px; padding: 3px; margin-bottom: 20px; }
     .tab-btn { flex: 1; border: none; background: transparent; padding: 10px; font-weight: bold; border-radius: 6px; cursor: pointer; color: #555; }
     .tab-btn.active { background: #fff; color: #0056b3; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    
+    /* องค์ประกอบฟอร์ม */
     .form-group { margin-bottom: 15px; }
     label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; font-size: 14px; }
     input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
     button.submit-btn { width: 100%; background-color: #2563eb; color: white; border: none; padding: 12px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; }
     button.submit-btn:disabled { background-color: #94a3b8; }
+    
+    /* ตัวหมุนสถานะกำลังโหลด / แจ้งเตือน */
     .loading-spinner { display: none; text-align: center; margin: 10px 0; color: #0056b3; font-size: 13px; }
     .alert-badge { background: #fee2e2; color: #dc2626; padding: 8px 12px; border-radius: 6px; font-size: 13px; margin-bottom: 15px; font-weight: bold; text-align: center; display: none; }
     
-    /* ปุ่มเข้าสู่ระบบพิเศษมุมขวาบน */
+    /* ปุ่มโหมดพิเศษ มุมบนขวา */
     .special-login-btn { position: absolute; top: 15px; right: 15px; background: #10b981; color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
     
-    /* Modal สำหรับกรอกรหัสผ่านพิเศษ */
+    /* ป๊อปอัป Modal พิเศษ */
     .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
     .modal-content { background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 350px; text-align: center; }
     .modal-content input { margin-bottom: 15px; }
@@ -37,8 +49,11 @@
 </head>
 <body>
 
+<!-- ==========================================
+     🖼️ SECTION 2: HTML STRUCTURE (โครงสร้างหน้าจอ)
+     ========================================== -->
 <div class="card">
-  <!-- ปุ่มเข้าสู่ระบบพิเศษ -->
+  <!-- ปุ่มกดเปิด Modal โหมดพิเศษ -->
   <button class="special-login-btn" onclick="openSpecialLoginModal()">🔐 โหมดพิเศษ</button>
 
   <div class="header">
@@ -46,6 +61,7 @@
     <p>ผู้ใช้งาน: <span id="user-display-name">กำลังโหลด...</span></p>
   </div>
 
+  <!-- ปุ่มสลับโหมด เปิดเคส / ปิดเคส -->
   <div class="tab-group">
     <button class="tab-btn active" onclick="setMode('open')">เปิดเคสใหม่</button>
     <button class="tab-btn" onclick="setMode('close')">ปิดเคส</button>
@@ -54,15 +70,16 @@
   <div id="loading" class="loading-spinner">กำลังโหลดข้อมูล...</div>
   <div id="open-tickets-count-badge" class="alert-badge">⚠️ มีเคสค้างทั้งหมด X เคส ในระบบ</div>
 
+  <!-- ฟอร์มรับข้อมูลหลัก -->
   <form id="repair-form">
-    <!-- โหมดเปิดเคส: ค้นหาสาขา -->
+    <!-- โหมดเปิดเคส: ช่องพิมพ์ค้นหาสาขา -->
     <div class="form-group" id="branch-input-group">
       <label for="branch-input">รหัสสาขา / ชื่อสาขา (พิมพ์เพื่อค้นหา):</label>
       <input type="text" id="branch-input" list="branch-list" placeholder="เช่น M101, พระราม 2..." onchange="onBranchSelected()">
       <datalist id="branch-list"></datalist>
     </div>
 
-    <!-- โหมดปิดเคส: เลือกสาขาที่มีเคสค้าง -->
+    <!-- โหมดปิดเคส: เลือกสาขาที่มีเคสค้างอยู่ -->
     <div class="form-group" id="branch-select-group" style="display: none;">
       <label for="branch-select">เลือกสาขาที่มีเคสค้าง:</label>
       <select id="branch-select" onchange="onBranchDropdownSelected()">
@@ -70,7 +87,7 @@
       </select>
     </div>
 
-    <!-- Dropdown เลือก Robot SN (โหมดเปิดเคส) -->
+    <!-- เลือก Robot SN (โหมดเปิดเคส) -->
     <div class="form-group" id="robot-sn-group">
       <label for="robot-sn">หมายเลขซีเรียล (SN หุ่นยนต์):</label>
       <select id="robot-sn">
@@ -78,7 +95,7 @@
       </select>
     </div>
 
-    <!-- Dropdown สำหรับโหมดปิดเคส (เลือก Ticket ID ที่ยังค้างอยู่) -->
+    <!-- เลือกรายการ Ticket ID ที่จะปิด (โหมดปิดเคส) -->
     <div class="form-group" id="open-tickets-group" style="display: none;">
       <label for="open-tickets">เลือกรายการเคสที่ต้องการปิด:</label>
       <select id="open-tickets">
@@ -86,7 +103,7 @@
       </select>
     </div>
 
-    <!-- หมวดหมู่ปัญหา 7 รายการ -->
+    <!-- หมวดหมู่ปัญหา -->
     <div class="form-group" id="issue-type-group">
       <label for="issue-type">หมวดหมู่ปัญหา:</label>
       <select id="issue-type">
@@ -100,16 +117,18 @@
       </select>
     </div>
 
+    <!-- ช่องกรอกรายละเอียด -->
     <div class="form-group">
       <label for="issue-detail" id="detail-label">รายละเอียดอาการเบื้องต้น:</label>
       <textarea id="issue-detail" rows="3" placeholder="ระบุรายละเอียด..." required></textarea>
     </div>
 
+    <!-- ปุ่มส่งฟอร์ม -->
     <button type="button" class="submit-btn" id="submit-btn" onclick="submitForm()">ยืนยันการเปิดเคส</button>
   </form>
 </div>
 
-<!-- Modal สำหรับกรอกรหัสผ่าน Special Login -->
+<!-- Modal ป๊อปอัปสำหรับ Special Login -->
 <div id="special-login-modal" class="modal">
   <div class="modal-content">
     <h3>🔑 เข้าสู่ระบบสิทธิ์พิเศษ</h3>
@@ -122,10 +141,15 @@
   </div>
 </div>
 
+<!-- ==========================================
+     ⚙️ SECTION 3: JAVASCRIPT LOGIC (ลอจิกการทำงาน)
+     ========================================== -->
 <script>
+  // ค่าคงที่ของระบบ
   const LIFF_ID = "2012406861-CdqnKRov";
   const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzjqc9DLeR9VMBm2d_5V0tb7rkH5o0imrF58f_Fy6dif5tCcP9LKlAF8Ubu_uO4lzt4Ag/exec";
 
+  // ตัวแปรเก็บ State ข้อมูลในหน้าเว็บ
   let currentMode = 'open';
   let userProfile = { userId: "LINE_USER", displayName: "LINE User" };
   let branchesData = [];
@@ -133,11 +157,13 @@
   let openTicketsData = [];
   let branchesWithOpenTickets = [];
 
+  // เมื่อโหลดหน้าเว็บสำเร็จ ให้เริ่มต้นทำงาน
   window.onload = function() {
     initializeLiff();
     loadBranchSuggestions();
   };
 
+  // --- 3.1 LIFF INIT & AUTO-UPSERT ---
   function initializeLiff() {
     liff.init({ liffId: LIFF_ID }).then(() => {
       if (!liff.isLoggedIn()) {
@@ -146,13 +172,13 @@
         liff.getProfile().then(profile => {
           userProfile = profile;
           document.getElementById('user-display-name').innerText = profile.displayName;
-          // ส่งสัญญาณ Upsert อัตโนมัติเมื่อเข้าหน้าเว็บ
-          triggerAutoUpsert(profile);
+          triggerAutoUpsert(profile); // บันทึกผู้ใช้ลง Auto_Users
         });
       }
     }).catch(err => console.error('LIFF Init Error:', err));
   }
 
+  // ส่งข้อมูลผู้ใช้ไป Upsert ที่ GAS
   function triggerAutoUpsert(profile) {
     fetch(GAS_WEB_APP_URL, {
       method: 'POST',
@@ -160,6 +186,7 @@
     }).catch(err => console.log("Auto upsert error:", err));
   }
 
+  // --- 3.2 SPECIAL LOGIN MODAL LOGIC ---
   function openSpecialLoginModal() {
     document.getElementById('special-password').value = '';
     document.getElementById('special-login-modal').style.display = 'flex';
@@ -169,6 +196,7 @@
     document.getElementById('special-login-modal').style.display = 'none';
   }
 
+  // ตรวจสอบ Password สิทธิ์พิเศษ
   function submitSpecialLogin() {
     const password = document.getElementById('special-password').value;
     if (!password) {
@@ -191,7 +219,6 @@
       if (res.status === 'success') {
         alert('🎉 ' + res.message + '\nRole: ' + res.role);
         closeSpecialLoginModal();
-        // จำลองเปิดฟังก์ชันพิเศษในอนาคตตรงนี้ เช่น เปิด Dashboard หรือเมนูจัดการขั้นสูง
       } else {
         alert(res.message);
         if (res.message.includes('ไม่มีสิทธิ์')) {
@@ -205,6 +232,8 @@
     });
   }
 
+  // --- 3.3 DATA LOADING FUNCTIONS ---
+  // โหลดรายชื่อสาขาสำหรับ Auto-complete
   function loadBranchSuggestions() {
     showLoading(true);
     fetch(`${GAS_WEB_APP_URL}?action=getBranches`)
@@ -224,6 +253,7 @@
       });
   }
 
+  // โหลดสาขาที่มีเคสค้างสำหรับโหมดปิดเคส
   function loadBranchesWithOpenTickets() {
     showLoading(true);
     fetch(`${GAS_WEB_APP_URL}?action=getBranchesWithOpenTickets`)
@@ -264,6 +294,7 @@
       });
   }
 
+  // เมื่อเลือกสาขาแล้ว ดึงรายชื่อ SN หุ่นยนต์
   function onBranchSelected() {
     const val = document.getElementById('branch-input').value;
     const branchId = val.split(' - ')[0].trim();
@@ -286,6 +317,7 @@
       });
   }
 
+  // เมื่อเลือกสาขาในโหมดปิดเคสแล้ว ดึงรายการเคสค้าง
   function onBranchDropdownSelected() {
     const branchId = document.getElementById('branch-select').value;
     if (!branchId) return;
@@ -308,6 +340,8 @@
       });
   }
 
+  // --- 3.4 FORM MODE SWITCHING & SUBMISSION ---
+  // สลับแท็บโหมด เปิดเคส / ปิดเคส
   function setMode(mode) {
     currentMode = mode;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -337,6 +371,7 @@
     }
   }
 
+  // ส่งข้อมูลฟอร์มไปยัง Google Apps Script
   function submitForm() {
     let branchId = '';
     let branchName = '';
@@ -421,6 +456,7 @@
     });
   }
 
+  // แสดง/ซ่อน สปินเนอร์โหลดข้อมูล
   function showLoading(show) {
     document.getElementById('loading').style.display = show ? 'block' : 'none';
   }
