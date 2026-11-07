@@ -11,6 +11,22 @@ window.onload = function() {
 };
 
 const AppModule = {
+  // ⚡ ฟังก์ชันสำหรับปิดหน้าต่าง (รองรับทั้ง LINE Mobile และ PC Browsers)
+  closeAppWindow() {
+    if (typeof liff !== 'undefined' && liff.isInClient && liff.isInClient()) {
+      // สำหรับการเปิดในแอป LINE บนมือถือ -> ปิดหน้าต่าง LIFF กลับเข้าหน้าแชต LINE
+      liff.closeWindow();
+    } else {
+      // สำหรับการเปิดบน Web Browser ในคอมพิวเตอร์ / เบราว์เซอร์ภายนอก
+      window.close();
+      
+      // กรณี Browser บล็อกการใช้ window.close() ตรงๆ
+      setTimeout(() => {
+        window.location.href = "about:blank";
+      }, 300);
+    }
+  },
+
   async loadBranchSuggestions() {
     AppModule.showLoading(true);
     branchesData = await ApiService.getBranches();
@@ -193,11 +209,8 @@ const AppModule = {
       btn.disabled = false;
       btn.innerText = currentMode === 'open' ? 'ยืนยันการเปิดเคส' : 'ยืนยันการปิดเคส';
       
-      if (liff.isInClient()) {
-        liff.closeWindow();
-      } else {
-        document.getElementById('repair-form').reset();
-      }
+      // บันทึกสำเร็จแล้ว สั่งปิดหน้าต่างอัตโนมัติ
+      AppModule.closeAppWindow();
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       btn.disabled = false;
